@@ -16,15 +16,16 @@ import org.apache.lucene.search.suggest.analyzing.SuggestStopFilter;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.index.IndexSettings;
-import org.elasticsearch.index.analysis.AbstractTokenFilterFactory;
+import org.elasticsearch.index.analysis.PluginTokenFilterFactory;
 import org.elasticsearch.index.analysis.Analysis;
+import org.elasticsearch.index.analysis.ESTokenStream;
 
 import java.util.Map;
 import java.util.Set;
 
 import static java.util.Collections.singletonMap;
 
-public class PolishStopTokenFilterFactory extends AbstractTokenFilterFactory {
+public class PolishStopTokenFilterFactory extends PluginTokenFilterFactory {
     private static final Map<String, Set<?>> NAMED_STOP_WORDS = singletonMap("_polish_", PolishAnalyzer.getDefaultStopSet());
 
     private final CharArraySet stopWords;
@@ -41,11 +42,12 @@ public class PolishStopTokenFilterFactory extends AbstractTokenFilterFactory {
     }
 
     @Override
-    public TokenStream create(TokenStream tokenStream) {
+    public ESTokenStream create(ESTokenStream stream) {
+        TokenStream input = (TokenStream) stream.unwrap(TokenStream.class);
         if (removeTrailing) {
-            return new StopFilter(tokenStream, stopWords);
+            return new ESTokenStream(new StopFilter(input, stopWords));
         } else {
-            return new SuggestStopFilter(tokenStream, stopWords);
+            return new ESTokenStream(new SuggestStopFilter(input, stopWords));
         }
     }
 

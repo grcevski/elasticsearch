@@ -17,7 +17,8 @@ import org.elasticsearch.common.io.Streams;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.index.IndexSettings;
-import org.elasticsearch.index.analysis.AbstractTokenFilterFactory;
+import org.elasticsearch.index.analysis.ESTokenStream;
+import org.elasticsearch.index.analysis.PluginTokenFilterFactory;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -37,7 +38,7 @@ import java.nio.file.InvalidPathException;
  * in the settings or refer to an external location (preferable located under
  * the {@code config} location, relative to it).
  */
-public class IcuCollationTokenFilterFactory extends AbstractTokenFilterFactory {
+public class IcuCollationTokenFilterFactory extends PluginTokenFilterFactory {
 
     private final Collator collator;
 
@@ -161,7 +162,7 @@ public class IcuCollationTokenFilterFactory extends AbstractTokenFilterFactory {
     }
 
     @Override
-    public TokenStream create(TokenStream tokenStream) {
-        return new ICUCollationKeyFilter(tokenStream, collator);
+    public ESTokenStream create(ESTokenStream tokenStream) {
+        return wrap(new ICUCollationKeyFilter((TokenStream) tokenStream.unwrap(TokenStream.class), collator));
     }
 }

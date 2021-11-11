@@ -15,16 +15,18 @@ import org.apache.lucene.analysis.stempel.StempelStemmer;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.index.IndexSettings;
-import org.elasticsearch.index.analysis.AbstractTokenFilterFactory;
+import org.elasticsearch.index.analysis.PluginTokenFilterFactory;
+import org.elasticsearch.index.analysis.ESTokenStream;
 
-public class PolishStemTokenFilterFactory extends AbstractTokenFilterFactory {
+public class PolishStemTokenFilterFactory extends PluginTokenFilterFactory {
 
     public PolishStemTokenFilterFactory(IndexSettings indexSettings, Environment environment, String name, Settings settings) {
         super(indexSettings, name, settings);
     }
 
     @Override
-    public TokenStream create(TokenStream tokenStream) {
-        return new StempelFilter(tokenStream, new StempelStemmer(PolishAnalyzer.getDefaultTable()));
+    public ESTokenStream create(ESTokenStream tokenStream) {
+        TokenStream input = (TokenStream) tokenStream.unwrap(TokenStream.class);
+        return wrap(new StempelFilter(input, new StempelStemmer(PolishAnalyzer.getDefaultTable())));
     }
 }

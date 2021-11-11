@@ -15,8 +15,9 @@ import org.apache.lucene.analysis.icu.ICUFoldingFilter;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.index.IndexSettings;
-import org.elasticsearch.index.analysis.AbstractTokenFilterFactory;
+import org.elasticsearch.index.analysis.ESTokenStream;
 import org.elasticsearch.index.analysis.NormalizingTokenFilterFactory;
+import org.elasticsearch.index.analysis.PluginTokenFilterFactory;
 
 /**
  * Uses the {@link org.apache.lucene.analysis.icu.ICUFoldingFilter}.
@@ -31,7 +32,7 @@ import org.elasticsearch.index.analysis.NormalizingTokenFilterFactory;
  *
  * @author kimchy (shay.banon)
  */
-public class IcuFoldingTokenFilterFactory extends AbstractTokenFilterFactory implements NormalizingTokenFilterFactory {
+public class IcuFoldingTokenFilterFactory extends PluginTokenFilterFactory implements NormalizingTokenFilterFactory {
     /** Store here the same Normalizer used by the lucene ICUFoldingFilter */
     private static final Normalizer2 ICU_FOLDING_NORMALIZER = Normalizer2.getInstance(
         ICUFoldingFilter.class.getResourceAsStream("utr30.nrm"),
@@ -47,8 +48,9 @@ public class IcuFoldingTokenFilterFactory extends AbstractTokenFilterFactory imp
     }
 
     @Override
-    public TokenStream create(TokenStream tokenStream) {
-        return new org.apache.lucene.analysis.icu.ICUNormalizer2Filter(tokenStream, normalizer);
+    public ESTokenStream create(ESTokenStream tokenStream) {
+        TokenStream input = (TokenStream) tokenStream.unwrap(TokenStream.class);
+        return wrap(new org.apache.lucene.analysis.icu.ICUNormalizer2Filter(input, normalizer));
     }
 
 }

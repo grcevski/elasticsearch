@@ -16,7 +16,8 @@ import org.apache.lucene.analysis.TokenStream;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.index.IndexSettings;
-import org.elasticsearch.index.analysis.AbstractTokenFilterFactory;
+import org.elasticsearch.index.analysis.PluginTokenFilterFactory;
+import org.elasticsearch.index.analysis.ESTokenStream;
 import org.elasticsearch.index.analysis.NormalizingTokenFilterFactory;
 
 /**
@@ -24,7 +25,7 @@ import org.elasticsearch.index.analysis.NormalizingTokenFilterFactory;
  * <p>The {@code name} can be used to provide the type of normalization to perform.</p>
  * <p>The {@code unicodeSetFilter} attribute can be used to provide the UniCodeSet for filtering.</p>
  */
-public class IcuNormalizerTokenFilterFactory extends AbstractTokenFilterFactory implements NormalizingTokenFilterFactory {
+public class IcuNormalizerTokenFilterFactory extends PluginTokenFilterFactory implements NormalizingTokenFilterFactory {
 
     private final Normalizer2 normalizer;
 
@@ -36,8 +37,9 @@ public class IcuNormalizerTokenFilterFactory extends AbstractTokenFilterFactory 
     }
 
     @Override
-    public TokenStream create(TokenStream tokenStream) {
-        return new org.apache.lucene.analysis.icu.ICUNormalizer2Filter(tokenStream, normalizer);
+    public ESTokenStream create(ESTokenStream tokenStream) {
+        TokenStream input = (TokenStream) tokenStream.unwrap(TokenStream.class);
+        return wrap(new org.apache.lucene.analysis.icu.ICUNormalizer2Filter(input, normalizer));
     }
 
     static Normalizer2 wrapWithUnicodeSetFilter(final IndexSettings indexSettings, final Normalizer2 normalizer, final Settings settings) {

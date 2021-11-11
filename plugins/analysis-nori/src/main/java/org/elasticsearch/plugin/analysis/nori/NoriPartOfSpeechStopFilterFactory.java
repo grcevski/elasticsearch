@@ -14,14 +14,15 @@ import org.apache.lucene.analysis.ko.POS;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.index.IndexSettings;
-import org.elasticsearch.index.analysis.AbstractTokenFilterFactory;
+import org.elasticsearch.index.analysis.PluginTokenFilterFactory;
 import org.elasticsearch.index.analysis.Analysis;
+import org.elasticsearch.index.analysis.ESTokenStream;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class NoriPartOfSpeechStopFilterFactory extends AbstractTokenFilterFactory {
+public class NoriPartOfSpeechStopFilterFactory extends PluginTokenFilterFactory {
     private final Set<POS.Tag> stopTags;
 
     public NoriPartOfSpeechStopFilterFactory(IndexSettings indexSettings, Environment env, String name, Settings settings) {
@@ -31,8 +32,9 @@ public class NoriPartOfSpeechStopFilterFactory extends AbstractTokenFilterFactor
     }
 
     @Override
-    public TokenStream create(TokenStream tokenStream) {
-        return new KoreanPartOfSpeechStopFilter(tokenStream, stopTags);
+    public ESTokenStream create(ESTokenStream tokenStream) {
+        TokenStream input = (TokenStream) tokenStream.unwrap(TokenStream.class);
+        return wrap(new KoreanPartOfSpeechStopFilter(input, stopTags));
     }
 
     static Set<POS.Tag> resolvePOSList(List<String> tagList) {

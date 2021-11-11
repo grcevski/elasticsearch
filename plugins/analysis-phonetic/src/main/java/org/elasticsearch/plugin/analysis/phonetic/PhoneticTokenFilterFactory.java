@@ -28,13 +28,14 @@ import org.apache.lucene.analysis.phonetic.PhoneticFilter;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.index.IndexSettings;
-import org.elasticsearch.index.analysis.AbstractTokenFilterFactory;
+import org.elasticsearch.index.analysis.PluginTokenFilterFactory;
+import org.elasticsearch.index.analysis.ESTokenStream;
 import org.elasticsearch.index.analysis.TokenFilterFactory;
 
 import java.util.HashSet;
 import java.util.List;
 
-public class PhoneticTokenFilterFactory extends AbstractTokenFilterFactory {
+public class PhoneticTokenFilterFactory extends PluginTokenFilterFactory {
 
     private final Encoder encoder;
     private final boolean replace;
@@ -107,23 +108,24 @@ public class PhoneticTokenFilterFactory extends AbstractTokenFilterFactory {
     }
 
     @Override
-    public TokenStream create(TokenStream tokenStream) {
+    public ESTokenStream create(ESTokenStream stream) {
+        TokenStream tokenStream = (TokenStream) stream.unwrap(TokenStream.class);
         if (encoder == null) {
             if (isDaitchMokotoff) {
-                return new DaitchMokotoffSoundexFilter(tokenStream, replace == false);
+                return wrap(new DaitchMokotoffSoundexFilter(tokenStream, replace == false));
             }
             if (ruletype != null && nametype != null) {
                 LanguageSet langset = null;
                 if (languageset != null && languageset.size() > 0) {
                     langset = LanguageSet.from(new HashSet<>(languageset));
                 }
-                return new BeiderMorseFilter(tokenStream, new PhoneticEngine(nametype, ruletype, true), langset);
+                return wrap(new BeiderMorseFilter(tokenStream, new PhoneticEngine(nametype, ruletype, true), langset));
             }
             if (maxcodelength > 0) {
-                return new DoubleMetaphoneFilter(tokenStream, maxcodelength, replace == false);
+                return wrap(new DoubleMetaphoneFilter(tokenStream, maxcodelength, replace == false));
             }
         } else {
-            return new PhoneticFilter(tokenStream, encoder, replace == false);
+            return wrap(new PhoneticFilter(tokenStream, encoder, replace == false));
         }
         throw new IllegalArgumentException("encoder error");
     }

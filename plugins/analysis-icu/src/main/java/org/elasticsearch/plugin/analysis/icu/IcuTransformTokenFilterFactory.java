@@ -15,10 +15,11 @@ import org.apache.lucene.analysis.icu.ICUTransformFilter;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.index.IndexSettings;
-import org.elasticsearch.index.analysis.AbstractTokenFilterFactory;
+import org.elasticsearch.index.analysis.PluginTokenFilterFactory;
+import org.elasticsearch.index.analysis.ESTokenStream;
 import org.elasticsearch.index.analysis.NormalizingTokenFilterFactory;
 
-public class IcuTransformTokenFilterFactory extends AbstractTokenFilterFactory implements NormalizingTokenFilterFactory {
+public class IcuTransformTokenFilterFactory extends PluginTokenFilterFactory implements NormalizingTokenFilterFactory {
 
     private final String id;
     private final int dir;
@@ -33,8 +34,8 @@ public class IcuTransformTokenFilterFactory extends AbstractTokenFilterFactory i
     }
 
     @Override
-    public TokenStream create(TokenStream tokenStream) {
-        return new ICUTransformFilter(tokenStream, transliterator);
+    public ESTokenStream create(ESTokenStream tokenStream) {
+        return wrap(new ICUTransformFilter((TokenStream) tokenStream.unwrap(TokenStream.class), transliterator));
     }
 
 }
