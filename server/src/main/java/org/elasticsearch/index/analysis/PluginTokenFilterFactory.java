@@ -9,13 +9,9 @@
 package org.elasticsearch.index.analysis;
 
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.util.Attribute;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.index.AbstractIndexComponent;
 import org.elasticsearch.index.IndexSettings;
-import org.elasticsearch.index.analysis.AbstractTokenFilterFactory;
-import org.elasticsearch.index.analysis.Analysis;
-import org.elasticsearch.index.analysis.ESTokenStream;
-import org.elasticsearch.index.analysis.TokenFilterFactory;
 
 public abstract class PluginTokenFilterFactory extends AbstractTokenFilterFactory {
 
@@ -34,8 +30,30 @@ public abstract class PluginTokenFilterFactory extends AbstractTokenFilterFactor
 
     @Override
     public final TokenStream create(TokenStream tokenStream) {
-        ESTokenStream wrapper = new ESTokenStream(tokenStream);
-        return create(wrapper).getDelegate();
+        ESTokenStream pluginWrappedTokenStream = create(new ESTokenStream(tokenStream));
+        return unwrapAndAddAttributes(pluginWrappedTokenStream);
+    }
+
+    private TokenStream unwrapAndAddAttributes(ESTokenStream tokenStream) {
+        TokenStream result = tokenStream.getDelegate();
+        for (Class<?> attributeClass : tokenStream.getPluginUsedAttributes()) {
+            addAttributeClass(result, attributeClass);
+        }
+
+        return result;
+    }
+
+    private void addAttributeClass(TokenStream stream, Class<?> attributeClass) {
+        ClassLoader ourClassLoader = this.getClass().getClassLoader();
+        if (attributeClass.getClassLoader().equals(ourClassLoader) == false) {
+            String className = attributeClass.getName();
+            try {
+                Class<?> attrClass = Class.forName(name, true, ourClassLoader);
+                stream.addAttribute((Class<? extends Attribute>)attrClass);
+            } catch (Exception x) {
+                // some error handling?
+            }
+        }
     }
 
     public abstract ESTokenStream create(ESTokenStream input);

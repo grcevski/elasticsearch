@@ -11,8 +11,12 @@ package org.elasticsearch.index.analysis;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.util.Attribute;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ESTokenStream {
     private final TokenStream delegate;
+    private final List<Class<?>> pluginUsedAttributes  = new ArrayList<>();
 
     public ESTokenStream(ESTokenStream in) {
         this.delegate = in.delegate;
@@ -38,6 +42,7 @@ public class ESTokenStream {
         if (attributeClasses != null) {
             for (int i = 0; i < attributeClasses.length; i++) {
                 delegate.addAttribute((Class<? extends Attribute>)attributeClasses[i]);
+                pluginUsedAttributes.add(attributeClasses[i]);
             }
         }
 
@@ -46,6 +51,10 @@ public class ESTokenStream {
         // the plugins MIN lucene version.
         ensureTokenStreamBackwardCompatibility(delegate, tokenStreamClass);
         return delegate;
+    }
+
+    public List<Class<?>> getPluginUsedAttributes() {
+        return pluginUsedAttributes;
     }
 
     private void ensureTokenStreamBackwardCompatibility(Object stream, Class<?> oldVersion) {
