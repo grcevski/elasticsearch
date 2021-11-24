@@ -16,9 +16,9 @@ import org.apache.lucene.search.suggest.analyzing.SuggestStopFilter;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.index.IndexSettings;
-import org.elasticsearch.index.analysis.PluginTokenFilterFactory;
 import org.elasticsearch.index.analysis.Analysis;
 import org.elasticsearch.index.analysis.ESTokenStream;
+import org.elasticsearch.index.analysis.PluginTokenFilterFactory;
 
 import java.util.Map;
 import java.util.Set;

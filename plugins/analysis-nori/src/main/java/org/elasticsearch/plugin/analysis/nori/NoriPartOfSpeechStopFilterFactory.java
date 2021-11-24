@@ -14,9 +14,9 @@ import org.apache.lucene.analysis.ko.POS;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.index.IndexSettings;
-import org.elasticsearch.index.analysis.PluginTokenFilterFactory;
 import org.elasticsearch.index.analysis.Analysis;
 import org.elasticsearch.index.analysis.ESTokenStream;
+import org.elasticsearch.index.analysis.PluginTokenFilterFactory;
 
 import java.util.HashSet;
 import java.util.List;

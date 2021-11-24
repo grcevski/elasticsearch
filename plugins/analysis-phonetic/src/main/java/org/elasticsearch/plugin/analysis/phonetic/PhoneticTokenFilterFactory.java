@@ -28,8 +28,8 @@ import org.apache.lucene.analysis.phonetic.PhoneticFilter;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.index.IndexSettings;
-import org.elasticsearch.index.analysis.PluginTokenFilterFactory;
 import org.elasticsearch.index.analysis.ESTokenStream;
+import org.elasticsearch.index.analysis.PluginTokenFilterFactory;
 import org.elasticsearch.index.analysis.TokenFilterFactory;
 
 import java.util.HashSet;
