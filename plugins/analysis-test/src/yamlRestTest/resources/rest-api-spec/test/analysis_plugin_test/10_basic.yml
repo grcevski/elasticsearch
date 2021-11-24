@@ -1,0 +1,10 @@
+# Integration tests for test analysis components
+#
+"Analyzer":
+  - do:
+      indices.analyze:
+        body:
+          text:         I love using elastic products
+          analyzer:     analysis_test_word_filter
+  - length: { tokens: 1 }
+  - match:  { tokens.0.token: elastic  }

@@ -15,9 +15,9 @@ import org.apache.lucene.analysis.icu.ICUTransformFilter;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.index.IndexSettings;
-import org.elasticsearch.index.analysis.PluginTokenFilterFactory;
 import org.elasticsearch.index.analysis.ESTokenStream;
 import org.elasticsearch.index.analysis.NormalizingTokenFilterFactory;
+import org.elasticsearch.index.analysis.PluginTokenFilterFactory;
 
 public class IcuTransformTokenFilterFactory extends PluginTokenFilterFactory implements NormalizingTokenFilterFactory {
 

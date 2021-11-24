@@ -12,11 +12,12 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.util.Attribute;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ESTokenStream {
     private final TokenStream delegate;
-    private final List<Class<?>> pluginUsedAttributes  = new ArrayList<>();
+    private final List<Class<? extends Attribute>> pluginUsedAttributes = new ArrayList<>();
 
     public ESTokenStream(ESTokenStream in) {
         this.delegate = in.delegate;
@@ -31,18 +32,44 @@ public class ESTokenStream {
         return delegate;
     }
 
+    private static boolean instanceOrSubclass(Class<?> clazz, Class<?> match) {
+        if (match.isAssignableFrom(clazz)) {
+            return true;
+        }
+
+        String matchingClassName = match.getCanonicalName();
+
+        while (Object.class.equals(clazz) == false) {
+            if (clazz.getCanonicalName().equals(matchingClassName)) {
+                return true;
+            }
+
+            Class<?> superClass = clazz.getSuperclass();
+            if (superClass == null) {
+                break;
+            }
+            clazz = superClass;
+        }
+
+        return false;
+    }
+
     private static void ensureClassCompatibility(Class<?> tokenStreamClass) {
-        if (tokenStreamClass.getName().equals(TokenStream.class.getName()) == false) {
+        if (instanceOrSubclass(tokenStreamClass, TokenStream.class) == false) {
             throw new IllegalArgumentException("You must provide a Lucene TokenStream.class instance");
         }
     }
 
-    public Object unwrap(Class<?> tokenStreamClass, Class<?>... attributeClasses) {
+    public Object unwrap(Class<?> tokenStreamClass) {
+        return unwrap(tokenStreamClass, Collections.emptyList());
+    }
+
+    public Object unwrap(Class<?> tokenStreamClass, List<Class<? extends Attribute>> attributeClasses) {
         ensureClassCompatibility(tokenStreamClass);
         if (attributeClasses != null) {
-            for (int i = 0; i < attributeClasses.length; i++) {
-                delegate.addAttribute((Class<? extends Attribute>)attributeClasses[i]);
-                pluginUsedAttributes.add(attributeClasses[i]);
+            for (Class<? extends Attribute> attrClass : attributeClasses) {
+                delegate.addAttribute(attrClass);
+                pluginUsedAttributes.add(attrClass);
             }
         }
 
@@ -53,7 +80,7 @@ public class ESTokenStream {
         return delegate;
     }
 
-    public List<Class<?>> getPluginUsedAttributes() {
+    public List<Class<? extends Attribute>> getPluginUsedAttributes() {
         return pluginUsedAttributes;
     }
 

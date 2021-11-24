@@ -36,20 +36,21 @@ public abstract class PluginTokenFilterFactory extends AbstractTokenFilterFactor
 
     private TokenStream unwrapAndAddAttributes(ESTokenStream tokenStream) {
         TokenStream result = tokenStream.getDelegate();
-        for (Class<?> attributeClass : tokenStream.getPluginUsedAttributes()) {
+        for (Class<? extends Attribute> attributeClass : tokenStream.getPluginUsedAttributes()) {
             addAttributeClass(result, attributeClass);
         }
 
         return result;
     }
 
-    private void addAttributeClass(TokenStream stream, Class<?> attributeClass) {
+    @SuppressWarnings("unchecked")
+    private void addAttributeClass(TokenStream stream, Class<? extends Attribute> attributeClass) {
         ClassLoader ourClassLoader = this.getClass().getClassLoader();
         if (attributeClass.getClassLoader().equals(ourClassLoader) == false) {
             String className = attributeClass.getName();
             try {
                 Class<?> attrClass = Class.forName(name, true, ourClassLoader);
-                stream.addAttribute((Class<? extends Attribute>)attrClass);
+                stream.addAttribute((Class<? extends Attribute>) attrClass);
             } catch (Exception x) {
                 // some error handling?
             }

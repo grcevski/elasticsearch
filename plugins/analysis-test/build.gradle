@@ -1,0 +1,35 @@
+/*
+ * Copyright Elasticsearch B.V. and/or licensed to Elasticsearch B.V. under one
+ * or more contributor license agreements. Licensed under the Elastic License
+ * 2.0 and the Server Side Public License, v 1; you may not use this file except
+ * in compliance with, at your election, the Elastic License 2.0 or the Server
+ * Side Public License, v 1.
+ */
+apply plugin: 'elasticsearch.internal-yaml-rest-test'
+apply plugin: 'elasticsearch.yaml-rest-compat-test'
+apply plugin: 'elasticsearch.internal-cluster-test'
+
+esplugin {
+  description 'The Test Analysis plugin tests the new stable Analysis Plugin API.'
+  classname 'org.elasticsearch.plugin.analysis.test.AnalysisTestPlugin'
+}
+
+dependencies {
+  api "org.apache.lucene:lucene-core:${versions.lucene}"
+  api "org.apache.lucene:lucene-analysis-common:${versions.lucene}"
+}
+
+restResources {
+  restApi {
+    include '_common', 'indices', 'index', 'search'
+  }
+}
+
+tasks.named("dependencyLicenses").configure {
+  mapping from: /lucene-.*/, to: 'lucene'
+}
+
+tasks.named("yamlRestTestV7CompatTransform").configure { task ->
+    task.skipTest("analysis_icu/10_basic/Normalization with deprecated unicodeSetFilter", "Cleanup versioned deprecations in analysis #41560")
+}
+
