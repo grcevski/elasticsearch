@@ -13,9 +13,13 @@ import org.apache.lucene.util.Attribute;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.index.IndexSettings;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public abstract class PluginTokenFilterFactory extends AbstractTokenFilterFactory {
 
     private final String name;
+    private final Set<Class<? extends Attribute>> pluginUsedAttributes = new HashSet<>();
 
     public PluginTokenFilterFactory(IndexSettings indexSettings, String name, Settings settings) {
         super(indexSettings, name, settings);
@@ -36,7 +40,7 @@ public abstract class PluginTokenFilterFactory extends AbstractTokenFilterFactor
 
     private TokenStream unwrapAndAddAttributes(ESTokenStream tokenStream) {
         TokenStream result = tokenStream.getDelegate();
-        for (Class<? extends Attribute> attributeClass : tokenStream.getPluginUsedAttributes()) {
+        for (Class<? extends Attribute> attributeClass : pluginUsedAttributes) {
             addAttributeClass(result, attributeClass);
         }
 
@@ -45,16 +49,20 @@ public abstract class PluginTokenFilterFactory extends AbstractTokenFilterFactor
 
     @SuppressWarnings("unchecked")
     private void addAttributeClass(TokenStream stream, Class<? extends Attribute> attributeClass) {
-        ClassLoader ourClassLoader = this.getClass().getClassLoader();
+        ClassLoader ourClassLoader = ESTokenStream.class.getClassLoader();
         if (attributeClass.getClassLoader().equals(ourClassLoader) == false) {
             String className = attributeClass.getName();
             try {
-                Class<?> attrClass = Class.forName(name, true, ourClassLoader);
+                Class<?> attrClass = Class.forName(className, true, ourClassLoader);
                 stream.addAttribute((Class<? extends Attribute>) attrClass);
             } catch (Exception x) {
                 // some error handling?
             }
         }
+    }
+
+    void usingAttribute(Class<? extends Attribute> attributeClass) {
+        pluginUsedAttributes.add(attributeClass);
     }
 
     public abstract ESTokenStream create(ESTokenStream input);

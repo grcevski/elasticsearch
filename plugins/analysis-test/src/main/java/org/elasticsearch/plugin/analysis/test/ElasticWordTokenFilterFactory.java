@@ -17,6 +17,8 @@ import org.elasticsearch.index.IndexSettings;
 import org.elasticsearch.index.analysis.ESTokenStream;
 import org.elasticsearch.index.analysis.PluginTokenFilterFactory;
 
+import java.util.Set;
+
 public class ElasticWordTokenFilterFactory extends PluginTokenFilterFactory {
     public ElasticWordTokenFilterFactory(IndexSettings indexSettings, Environment environment, String name, Settings settings) {
         super(indexSettings, name, settings);
@@ -24,7 +26,7 @@ public class ElasticWordTokenFilterFactory extends PluginTokenFilterFactory {
 
     @Override
     public ESTokenStream create(ESTokenStream input) {
-        return wrap(new ElasticWordOnlyTokenFilter((TokenStream) input.unwrap(TokenStream.class)));
+        return wrap(new ElasticWordOnlyTokenFilter((TokenStream) input.unwrap(this, Set.of(CharTermAttribute.class))));
     }
 
     public class ElasticWordOnlyTokenFilter extends FilteringTokenFilter {

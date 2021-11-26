@@ -11,13 +11,11 @@ package org.elasticsearch.index.analysis;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.util.Attribute;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
+import java.util.Set;
 
 public class ESTokenStream {
     private final TokenStream delegate;
-    private final List<Class<? extends Attribute>> pluginUsedAttributes = new ArrayList<>();
 
     public ESTokenStream(ESTokenStream in) {
         this.delegate = in.delegate;
@@ -60,16 +58,21 @@ public class ESTokenStream {
         }
     }
 
-    public Object unwrap(Class<?> tokenStreamClass) {
-        return unwrap(tokenStreamClass, Collections.emptyList());
+    public Object unwrap(PluginTokenFilterFactory factory) {
+        return unwrap(factory, Collections.emptySet());
     }
 
-    public Object unwrap(Class<?> tokenStreamClass, List<Class<? extends Attribute>> attributeClasses) {
-        ensureClassCompatibility(tokenStreamClass);
+    public Object unwrap(PluginTokenFilterFactory factory, Set<Class<? extends Attribute>> attributeClasses) {
+        Class<?> tokenStreamClass;
+        try {
+            tokenStreamClass = factory.getClass().getClassLoader().loadClass("org.apache.lucene.analysis.TokenStream");
+        } catch (ClassNotFoundException e) {
+            throw new IllegalArgumentException("You must bring Lucene core with your plugin as a dependency.");
+        }
         if (attributeClasses != null) {
             for (Class<? extends Attribute> attrClass : attributeClasses) {
                 delegate.addAttribute(attrClass);
-                pluginUsedAttributes.add(attrClass);
+                factory.usingAttribute(attrClass);
             }
         }
 
@@ -78,10 +81,6 @@ public class ESTokenStream {
         // the plugins MIN lucene version.
         ensureTokenStreamBackwardCompatibility(delegate, tokenStreamClass);
         return delegate;
-    }
-
-    public List<Class<? extends Attribute>> getPluginUsedAttributes() {
-        return pluginUsedAttributes;
     }
 
     private void ensureTokenStreamBackwardCompatibility(Object stream, Class<?> oldVersion) {

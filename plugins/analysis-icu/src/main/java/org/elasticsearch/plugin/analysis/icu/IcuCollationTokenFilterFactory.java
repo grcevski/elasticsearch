@@ -163,6 +163,6 @@ public class IcuCollationTokenFilterFactory extends PluginTokenFilterFactory {
 
     @Override
     public ESTokenStream create(ESTokenStream tokenStream) {
-        return wrap(new ICUCollationKeyFilter((TokenStream) tokenStream.unwrap(TokenStream.class), collator));
+        return wrap(new ICUCollationKeyFilter((TokenStream) tokenStream.unwrap(this), collator));
     }
 }
