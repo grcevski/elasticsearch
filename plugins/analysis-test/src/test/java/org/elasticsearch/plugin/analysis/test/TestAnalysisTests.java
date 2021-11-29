@@ -15,8 +15,10 @@ import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.standard.StandardTokenizer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.util.ElisionFilter;
+import org.apache.lucene.util.AttributeSource;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.core.SuppressForbidden;
 import org.elasticsearch.index.Index;
 import org.elasticsearch.index.analysis.TokenFilterFactory;
 import org.elasticsearch.plugins.AnalysisPlugin;
@@ -26,12 +28,17 @@ import org.hamcrest.MatcherAssert;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.apache.lucene.analysis.BaseTokenStreamTestCase.newAttributeFactory;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.instanceOf;
 
 public class TestAnalysisTests extends ESTestCase {
@@ -126,5 +133,50 @@ public class TestAnalysisTests extends ESTestCase {
         });
     }
 
+    @SuppressForbidden(reason = "We're forced to uses Class#getDeclaredMethods() here because this test checks public class contracts")
+    public void testTokenStreamMethodsStability() {
+        // AttributeSource doesn't have other superclasses than j.l.Object
+        assertEquals(Object.class, AttributeSource.class.getSuperclass());
+        // TokenStream directly extends AttributeSource
+        assertEquals(AttributeSource.class, TokenStream.class.getSuperclass());
 
+        final List<String> publicTSMethods = Arrays.stream(TokenStream.class.getDeclaredMethods())
+            .filter(method -> Modifier.isPublic(method.getModifiers()))
+            .map(Method::toGenericString)
+            .collect(Collectors.toCollection(ArrayList::new));
+
+        assertThat(publicTSMethods, containsInAnyOrder(
+            "public abstract boolean org.apache.lucene.analysis.TokenStream.incrementToken() throws java.io.IOException",
+            "public void org.apache.lucene.analysis.TokenStream.close() throws java.io.IOException",
+            "public void org.apache.lucene.analysis.TokenStream.end() throws java.io.IOException",
+            "public void org.apache.lucene.analysis.TokenStream.reset() throws java.io.IOException"));
+
+        final List<String> publicASMethods = Arrays.stream(AttributeSource.class.getDeclaredMethods())
+            .filter(method -> Modifier.isPublic(method.getModifiers()))
+            .map(Method::toGenericString)
+            .collect(Collectors.toCollection(ArrayList::new));
+
+        assertThat(publicASMethods, containsInAnyOrder(
+            "public boolean org.apache.lucene.util.AttributeSource.equals(java.lang.Object)",
+            "public final <T extends org.apache.lucene.util.Attribute> T org.apache.lucene.util.AttributeSource.addAttribute(java.lang.Class<T>)",
+            "public final <T extends org.apache.lucene.util.Attribute> T org.apache.lucene.util.AttributeSource.getAttribute(java.lang.Class<T>)",
+            "public final boolean org.apache.lucene.util.AttributeSource.hasAttribute(java.lang.Class<? extends org.apache.lucene.util.Attribute>)",
+            "public final boolean org.apache.lucene.util.AttributeSource.hasAttributes()",
+            "public final java.lang.String org.apache.lucene.util.AttributeSource.reflectAsString(boolean)",
+            "public final java.util.Iterator<java.lang.Class<? extends org.apache.lucene.util.Attribute>> org.apache.lucene.util.AttributeSource.getAttributeClassesIterator()",
+            "public final java.util.Iterator<org.apache.lucene.util.AttributeImpl> org.apache.lucene.util.AttributeSource.getAttributeImplsIterator()",
+            "public final org.apache.lucene.util.AttributeFactory org.apache.lucene.util.AttributeSource.getAttributeFactory()",
+            "public final org.apache.lucene.util.AttributeSource org.apache.lucene.util.AttributeSource.cloneAttributes()",
+            "public final org.apache.lucene.util.AttributeSource$State org.apache.lucene.util.AttributeSource.captureState()",
+            "public final void org.apache.lucene.util.AttributeSource.addAttributeImpl(org.apache.lucene.util.AttributeImpl)",
+            "public final void org.apache.lucene.util.AttributeSource.clearAttributes()",
+            "public final void org.apache.lucene.util.AttributeSource.copyTo(org.apache.lucene.util.AttributeSource)",
+            "public final void org.apache.lucene.util.AttributeSource.endAttributes()",
+            "public final void org.apache.lucene.util.AttributeSource.reflectWith(org.apache.lucene.util.AttributeReflector)",
+            "public final void org.apache.lucene.util.AttributeSource.removeAllAttributes()",
+            "public final void org.apache.lucene.util.AttributeSource.restoreState(org.apache.lucene.util.AttributeSource$State)",
+            "public int org.apache.lucene.util.AttributeSource.hashCode()",
+            "public java.lang.String org.apache.lucene.util.AttributeSource.toString()"
+        ));
+    }
 }
