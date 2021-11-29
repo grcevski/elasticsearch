@@ -24,10 +24,7 @@ import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.test.ESTestCase;
 import org.hamcrest.MatcherAssert;
 
-import java.io.DataInputStream;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.StringReader;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -59,30 +56,20 @@ public class TestAnalysisTests extends ESTestCase {
         }
 
         private Class<?> getClass(String name) {
-            String file = name.replace('.', File.separatorChar) + ".class";
-            byte[] byteArr;
+            String fileName = name.replaceAll("\\.", "/") + ".class";
+
             try {
-                byteArr = loadClassData(file);
+                byte[] byteArr = loadClassData(fileName);
                 Class<?> c = defineClass(name, byteArr, 0, byteArr.length);
                 resolveClass(c);
                 return c;
             } catch (IOException e) {
-                e.printStackTrace();
-                return null;
+                throw new RuntimeException("Unable to load class data?", e);
             }
         }
 
-        private byte[] loadClassData(String name) throws IOException {
-            InputStream stream = getClass().getClassLoader().getResourceAsStream(name);
-            if (stream == null) {
-                return new byte[0];
-            }
-            int size = stream.available();
-            byte[] buff = new byte[size];
-            DataInputStream in = new DataInputStream(stream);
-            in.readFully(buff);
-            in.close();
-            return buff;
+        private byte[] loadClassData(String fileName) throws IOException {
+            return getClass().getClassLoader().getResourceAsStream(fileName).readAllBytes();
         }
     }
 
@@ -126,6 +113,8 @@ public class TestAnalysisTests extends ESTestCase {
                 TokenFilter filter = new ElisionFilter(tokenizer, articles);
                 TokenStream pluginStream = factory.create(filter);
 
+                assertNotEquals(tokenizer.getClass().getClassLoader(), pluginStream.getClass().getClassLoader());
+
                 List<String> pluginTas = process(pluginStream);
 
                 assertEquals("Elastic", pluginTas.get(0));
@@ -136,4 +125,6 @@ public class TestAnalysisTests extends ESTestCase {
             return null;
         });
     }
+
+
 }
