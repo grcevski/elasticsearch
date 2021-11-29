@@ -8,7 +8,6 @@
 
 package org.elasticsearch.plugin.analysis.nori;
 
-import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.ko.KoreanPartOfSpeechStopFilter;
 import org.apache.lucene.analysis.ko.POS;
 import org.elasticsearch.common.settings.Settings;
@@ -33,8 +32,7 @@ public class NoriPartOfSpeechStopFilterFactory extends PluginTokenFilterFactory 
 
     @Override
     public ESTokenStream create(ESTokenStream tokenStream) {
-        TokenStream input = (TokenStream) tokenStream.unwrap(this);
-        return wrap(new KoreanPartOfSpeechStopFilter(input, stopTags));
+        return wrap(new KoreanPartOfSpeechStopFilter(tokenStream.unwrap(this), stopTags));
     }
 
     static Set<POS.Tag> resolvePOSList(List<String> tagList) {

@@ -10,7 +10,6 @@ package org.elasticsearch.plugin.analysis.icu;
 
 import com.ibm.icu.text.Normalizer2;
 
-import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.icu.ICUFoldingFilter;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
@@ -49,8 +48,7 @@ public class IcuFoldingTokenFilterFactory extends PluginTokenFilterFactory imple
 
     @Override
     public ESTokenStream create(ESTokenStream tokenStream) {
-        TokenStream input = (TokenStream) tokenStream.unwrap(this);
-        return wrap(new org.apache.lucene.analysis.icu.ICUNormalizer2Filter(input, normalizer));
+        return wrap(new org.apache.lucene.analysis.icu.ICUNormalizer2Filter(tokenStream.unwrap(this), normalizer));
     }
 
 }

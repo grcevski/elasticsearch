@@ -10,7 +10,6 @@ package org.elasticsearch.plugin.analysis.icu;
 
 import com.ibm.icu.text.Transliterator;
 
-import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.icu.ICUTransformFilter;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
@@ -35,7 +34,7 @@ public class IcuTransformTokenFilterFactory extends PluginTokenFilterFactory imp
 
     @Override
     public ESTokenStream create(ESTokenStream tokenStream) {
-        return wrap(new ICUTransformFilter((TokenStream) tokenStream.unwrap(this), transliterator));
+        return wrap(new ICUTransformFilter(tokenStream.unwrap(this), transliterator));
     }
 
 }

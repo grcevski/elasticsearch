@@ -12,7 +12,6 @@ import com.ibm.icu.text.FilteredNormalizer2;
 import com.ibm.icu.text.Normalizer2;
 import com.ibm.icu.text.UnicodeSet;
 
-import org.apache.lucene.analysis.TokenStream;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.index.IndexSettings;
@@ -38,8 +37,7 @@ public class IcuNormalizerTokenFilterFactory extends PluginTokenFilterFactory im
 
     @Override
     public ESTokenStream create(ESTokenStream tokenStream) {
-        TokenStream input = (TokenStream) tokenStream.unwrap(this);
-        return wrap(new org.apache.lucene.analysis.icu.ICUNormalizer2Filter(input, normalizer));
+        return wrap(new org.apache.lucene.analysis.icu.ICUNormalizer2Filter(tokenStream.unwrap(this), normalizer));
     }
 
     static Normalizer2 wrapWithUnicodeSetFilter(final IndexSettings indexSettings, final Normalizer2 normalizer, final Settings settings) {

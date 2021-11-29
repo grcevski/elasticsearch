@@ -104,12 +104,11 @@ public class TestAnalysisTests extends ESTestCase {
         AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
             PluginClassLoader pluginLoader = new PluginClassLoader(this.getClass().getClassLoader());
             try {
-                AnalysisPlugin plugin = (AnalysisPlugin)loadPluginClass(
-                    AnalysisTestPlugin.class.getCanonicalName(),
-                    pluginLoader).getDeclaredConstructor(null).newInstance();
+                AnalysisPlugin plugin = (AnalysisPlugin) loadPluginClass(AnalysisTestPlugin.class.getCanonicalName(), pluginLoader)
+                    .getConstructor((Class<?>[]) null)
+                    .newInstance();
 
-                TokenFilterFactory factory = plugin
-                    .getTokenFilters()
+                TokenFilterFactory factory = plugin.getTokenFilters()
                     .get("analysis_test_word_filter")
                     .get(null, "analysis_test_word_filter");
 
@@ -145,38 +144,50 @@ public class TestAnalysisTests extends ESTestCase {
             .map(Method::toGenericString)
             .collect(Collectors.toCollection(ArrayList::new));
 
-        assertThat(publicTSMethods, containsInAnyOrder(
-            "public abstract boolean org.apache.lucene.analysis.TokenStream.incrementToken() throws java.io.IOException",
-            "public void org.apache.lucene.analysis.TokenStream.close() throws java.io.IOException",
-            "public void org.apache.lucene.analysis.TokenStream.end() throws java.io.IOException",
-            "public void org.apache.lucene.analysis.TokenStream.reset() throws java.io.IOException"));
+        assertThat(
+            publicTSMethods,
+            containsInAnyOrder(
+                "public abstract boolean org.apache.lucene.analysis.TokenStream.incrementToken() throws java.io.IOException",
+                "public void org.apache.lucene.analysis.TokenStream.close() throws java.io.IOException",
+                "public void org.apache.lucene.analysis.TokenStream.end() throws java.io.IOException",
+                "public void org.apache.lucene.analysis.TokenStream.reset() throws java.io.IOException"
+            )
+        );
 
         final List<String> publicASMethods = Arrays.stream(AttributeSource.class.getDeclaredMethods())
             .filter(method -> Modifier.isPublic(method.getModifiers()))
             .map(Method::toGenericString)
             .collect(Collectors.toCollection(ArrayList::new));
 
-        assertThat(publicASMethods, containsInAnyOrder(
-            "public boolean org.apache.lucene.util.AttributeSource.equals(java.lang.Object)",
-            "public final <T extends org.apache.lucene.util.Attribute> T org.apache.lucene.util.AttributeSource.addAttribute(java.lang.Class<T>)",
-            "public final <T extends org.apache.lucene.util.Attribute> T org.apache.lucene.util.AttributeSource.getAttribute(java.lang.Class<T>)",
-            "public final boolean org.apache.lucene.util.AttributeSource.hasAttribute(java.lang.Class<? extends org.apache.lucene.util.Attribute>)",
-            "public final boolean org.apache.lucene.util.AttributeSource.hasAttributes()",
-            "public final java.lang.String org.apache.lucene.util.AttributeSource.reflectAsString(boolean)",
-            "public final java.util.Iterator<java.lang.Class<? extends org.apache.lucene.util.Attribute>> org.apache.lucene.util.AttributeSource.getAttributeClassesIterator()",
-            "public final java.util.Iterator<org.apache.lucene.util.AttributeImpl> org.apache.lucene.util.AttributeSource.getAttributeImplsIterator()",
-            "public final org.apache.lucene.util.AttributeFactory org.apache.lucene.util.AttributeSource.getAttributeFactory()",
-            "public final org.apache.lucene.util.AttributeSource org.apache.lucene.util.AttributeSource.cloneAttributes()",
-            "public final org.apache.lucene.util.AttributeSource$State org.apache.lucene.util.AttributeSource.captureState()",
-            "public final void org.apache.lucene.util.AttributeSource.addAttributeImpl(org.apache.lucene.util.AttributeImpl)",
-            "public final void org.apache.lucene.util.AttributeSource.clearAttributes()",
-            "public final void org.apache.lucene.util.AttributeSource.copyTo(org.apache.lucene.util.AttributeSource)",
-            "public final void org.apache.lucene.util.AttributeSource.endAttributes()",
-            "public final void org.apache.lucene.util.AttributeSource.reflectWith(org.apache.lucene.util.AttributeReflector)",
-            "public final void org.apache.lucene.util.AttributeSource.removeAllAttributes()",
-            "public final void org.apache.lucene.util.AttributeSource.restoreState(org.apache.lucene.util.AttributeSource$State)",
-            "public int org.apache.lucene.util.AttributeSource.hashCode()",
-            "public java.lang.String org.apache.lucene.util.AttributeSource.toString()"
-        ));
+        assertThat(
+            publicASMethods,
+            containsInAnyOrder(
+                "public boolean org.apache.lucene.util.AttributeSource.equals(java.lang.Object)",
+                "public final <T extends org.apache.lucene.util.Attribute> T "
+                    + "org.apache.lucene.util.AttributeSource.addAttribute(java.lang.Class<T>)",
+                "public final <T extends org.apache.lucene.util.Attribute> T "
+                    + "org.apache.lucene.util.AttributeSource.getAttribute(java.lang.Class<T>)",
+                "public final boolean org.apache.lucene.util.AttributeSource.hasAttribute(java.lang.Class<? "
+                    + "extends org.apache.lucene.util.Attribute>)",
+                "public final boolean org.apache.lucene.util.AttributeSource.hasAttributes()",
+                "public final java.lang.String org.apache.lucene.util.AttributeSource.reflectAsString(boolean)",
+                "public final java.util.Iterator<java.lang.Class<? extends org.apache.lucene.util.Attribute>> "
+                    + "org.apache.lucene.util.AttributeSource.getAttributeClassesIterator()",
+                "public final java.util.Iterator<org.apache.lucene.util.AttributeImpl> "
+                    + "org.apache.lucene.util.AttributeSource.getAttributeImplsIterator()",
+                "public final org.apache.lucene.util.AttributeFactory org.apache.lucene.util.AttributeSource.getAttributeFactory()",
+                "public final org.apache.lucene.util.AttributeSource org.apache.lucene.util.AttributeSource.cloneAttributes()",
+                "public final org.apache.lucene.util.AttributeSource$State org.apache.lucene.util.AttributeSource.captureState()",
+                "public final void org.apache.lucene.util.AttributeSource.addAttributeImpl(org.apache.lucene.util.AttributeImpl)",
+                "public final void org.apache.lucene.util.AttributeSource.clearAttributes()",
+                "public final void org.apache.lucene.util.AttributeSource.copyTo(org.apache.lucene.util.AttributeSource)",
+                "public final void org.apache.lucene.util.AttributeSource.endAttributes()",
+                "public final void org.apache.lucene.util.AttributeSource.reflectWith(org.apache.lucene.util.AttributeReflector)",
+                "public final void org.apache.lucene.util.AttributeSource.removeAllAttributes()",
+                "public final void org.apache.lucene.util.AttributeSource.restoreState(org.apache.lucene.util.AttributeSource$State)",
+                "public int org.apache.lucene.util.AttributeSource.hashCode()",
+                "public java.lang.String org.apache.lucene.util.AttributeSource.toString()"
+            )
+        );
     }
 }

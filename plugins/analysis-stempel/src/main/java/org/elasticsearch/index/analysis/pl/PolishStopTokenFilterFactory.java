@@ -43,7 +43,7 @@ public class PolishStopTokenFilterFactory extends PluginTokenFilterFactory {
 
     @Override
     public ESTokenStream create(ESTokenStream stream) {
-        TokenStream input = (TokenStream) stream.unwrap(this);
+        TokenStream input = stream.unwrap(this);
         if (removeTrailing) {
             return new ESTokenStream(new StopFilter(input, stopWords));
         } else {

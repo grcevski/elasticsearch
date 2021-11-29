@@ -20,11 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class AnalysisTestPlugin extends Plugin implements AnalysisPlugin {
-
-    public AnalysisTestPlugin() {
-        System.out.println("Test plugin");
-    }
-
     @Override
     public Map<String, AnalysisProvider<TokenFilterFactory>> getTokenFilters() {
         return Map.of("analysis_test_word_filter", ElasticWordTokenFilterFactory::new);

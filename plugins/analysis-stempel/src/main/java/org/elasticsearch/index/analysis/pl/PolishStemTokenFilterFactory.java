@@ -8,7 +8,6 @@
 
 package org.elasticsearch.index.analysis.pl;
 
-import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.pl.PolishAnalyzer;
 import org.apache.lucene.analysis.stempel.StempelFilter;
 import org.apache.lucene.analysis.stempel.StempelStemmer;
@@ -26,7 +25,6 @@ public class PolishStemTokenFilterFactory extends PluginTokenFilterFactory {
 
     @Override
     public ESTokenStream create(ESTokenStream tokenStream) {
-        TokenStream input = (TokenStream) tokenStream.unwrap(this);
-        return wrap(new StempelFilter(input, new StempelStemmer(PolishAnalyzer.getDefaultTable())));
+        return wrap(new StempelFilter(tokenStream.unwrap(this), new StempelStemmer(PolishAnalyzer.getDefaultTable())));
     }
 }
