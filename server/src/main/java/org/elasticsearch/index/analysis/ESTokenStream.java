@@ -9,10 +9,6 @@
 package org.elasticsearch.index.analysis;
 
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.util.Attribute;
-
-import java.util.Collections;
-import java.util.Set;
 
 public class ESTokenStream {
     private final TokenStream delegate;
@@ -58,22 +54,12 @@ public class ESTokenStream {
         }
     }
 
-    public Object unwrap(PluginTokenFilterFactory factory) {
-        return unwrap(factory, Collections.emptySet());
-    }
-
-    public Object unwrap(PluginTokenFilterFactory factory, Set<Class<? extends Attribute>> attributeClasses) {
+    public TokenStream unwrap(PluginTokenFilterFactory factory) {
         Class<?> tokenStreamClass;
         try {
             tokenStreamClass = factory.getClass().getClassLoader().loadClass("org.apache.lucene.analysis.TokenStream");
         } catch (ClassNotFoundException e) {
-            throw new IllegalArgumentException("You must bring Lucene core with your plugin as a dependency.");
-        }
-        if (attributeClasses != null) {
-            for (Class<? extends Attribute> attrClass : attributeClasses) {
-                delegate.addAttribute(attrClass);
-                factory.usingAttribute(attrClass);
-            }
+            throw new IllegalArgumentException("You must bring Lucene core and analysis with your plugin as a dependency.");
         }
 
         // If the TokenStream interface ever breaks in the future we'll need to use

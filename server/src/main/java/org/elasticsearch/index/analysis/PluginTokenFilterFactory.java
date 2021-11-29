@@ -9,17 +9,12 @@
 package org.elasticsearch.index.analysis;
 
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.util.Attribute;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.index.IndexSettings;
-
-import java.util.HashSet;
-import java.util.Set;
 
 public abstract class PluginTokenFilterFactory extends AbstractTokenFilterFactory {
 
     private final String name;
-    private final Set<Class<? extends Attribute>> pluginUsedAttributes = new HashSet<>();
 
     public PluginTokenFilterFactory(IndexSettings indexSettings, String name, Settings settings) {
         super(indexSettings, name, settings);
@@ -35,34 +30,11 @@ public abstract class PluginTokenFilterFactory extends AbstractTokenFilterFactor
     @Override
     public final TokenStream create(TokenStream tokenStream) {
         ESTokenStream pluginWrappedTokenStream = create(new ESTokenStream(tokenStream));
-        return unwrapAndAddAttributes(pluginWrappedTokenStream);
+        return unwrap(pluginWrappedTokenStream);
     }
 
-    private TokenStream unwrapAndAddAttributes(ESTokenStream tokenStream) {
-        TokenStream result = tokenStream.getDelegate();
-        for (Class<? extends Attribute> attributeClass : pluginUsedAttributes) {
-            addAttributeClass(result, attributeClass);
-        }
-
-        return result;
-    }
-
-    @SuppressWarnings("unchecked")
-    private void addAttributeClass(TokenStream stream, Class<? extends Attribute> attributeClass) {
-        ClassLoader ourClassLoader = ESTokenStream.class.getClassLoader();
-        if (attributeClass.getClassLoader().equals(ourClassLoader) == false) {
-            String className = attributeClass.getName();
-            try {
-                Class<?> attrClass = Class.forName(className, true, ourClassLoader);
-                stream.addAttribute((Class<? extends Attribute>) attrClass);
-            } catch (Exception x) {
-                // some error handling?
-            }
-        }
-    }
-
-    void usingAttribute(Class<? extends Attribute> attributeClass) {
-        pluginUsedAttributes.add(attributeClass);
+    private TokenStream unwrap(ESTokenStream tokenStream) {
+        return tokenStream.getDelegate();
     }
 
     public abstract ESTokenStream create(ESTokenStream input);
