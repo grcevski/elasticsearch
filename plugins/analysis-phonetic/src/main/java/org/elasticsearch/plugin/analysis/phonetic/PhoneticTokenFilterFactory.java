@@ -108,7 +108,7 @@ public class PhoneticTokenFilterFactory extends PluginTokenFilterFactory {
     }
 
     @Override
-    public ESTokenStream create(ESTokenStream stream) {
+    public ESTokenStream newInstance(ESTokenStream stream) {
         TokenStream tokenStream = stream.unwrap(this);
         if (encoder == null) {
             if (isDaitchMokotoff) {

@@ -31,7 +31,7 @@ public class NoriPartOfSpeechStopFilterFactory extends PluginTokenFilterFactory 
     }
 
     @Override
-    public ESTokenStream create(ESTokenStream tokenStream) {
+    public ESTokenStream newInstance(ESTokenStream tokenStream) {
         return wrap(new KoreanPartOfSpeechStopFilter(tokenStream.unwrap(this), stopTags));
     }
 

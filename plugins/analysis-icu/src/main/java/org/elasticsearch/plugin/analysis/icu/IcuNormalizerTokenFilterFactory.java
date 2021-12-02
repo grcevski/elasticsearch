@@ -36,7 +36,7 @@ public class IcuNormalizerTokenFilterFactory extends PluginTokenFilterFactory im
     }
 
     @Override
-    public ESTokenStream create(ESTokenStream tokenStream) {
+    public ESTokenStream newInstance(ESTokenStream tokenStream) {
         return wrap(new org.apache.lucene.analysis.icu.ICUNormalizer2Filter(tokenStream.unwrap(this), normalizer));
     }
 

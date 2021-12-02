@@ -33,7 +33,7 @@ public class IcuTransformTokenFilterFactory extends PluginTokenFilterFactory imp
     }
 
     @Override
-    public ESTokenStream create(ESTokenStream tokenStream) {
+    public ESTokenStream newInstance(ESTokenStream tokenStream) {
         return wrap(new ICUTransformFilter(tokenStream.unwrap(this), transliterator));
     }
 

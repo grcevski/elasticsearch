@@ -24,7 +24,7 @@ public class PolishStemTokenFilterFactory extends PluginTokenFilterFactory {
     }
 
     @Override
-    public ESTokenStream create(ESTokenStream tokenStream) {
+    public ESTokenStream newInstance(ESTokenStream tokenStream) {
         return wrap(new StempelFilter(tokenStream.unwrap(this), new StempelStemmer(PolishAnalyzer.getDefaultTable())));
     }
 }

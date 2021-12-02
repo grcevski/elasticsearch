@@ -22,7 +22,6 @@ import org.elasticsearch.core.SuppressForbidden;
 import org.elasticsearch.index.Index;
 import org.elasticsearch.index.analysis.TokenFilterFactory;
 import org.elasticsearch.plugins.AnalysisPlugin;
-import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.test.ESTestCase;
 import org.hamcrest.MatcherAssert;
 
@@ -30,6 +29,8 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
@@ -41,7 +42,7 @@ import static org.apache.lucene.analysis.BaseTokenStreamTestCase.newAttributeFac
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.instanceOf;
 
-public class TestAnalysisTests extends ESTestCase {
+public class AnalysisTestPluginTests extends ESTestCase {
     public void testDefaultsTestPluginAnalysis() throws IOException {
         final TestAnalysis analysis = createTestAnalysis(new Index("test", "_na_"), Settings.EMPTY, new AnalysisTestPlugin());
         TokenFilterFactory tokenizerFactory = analysis.tokenFilter.get("analysis_test_word_filter");
@@ -55,7 +56,12 @@ public class TestAnalysisTests extends ESTestCase {
 
         @Override
         public Class<?> loadClass(String name) throws ClassNotFoundException {
-            if (name.startsWith("org.elasticsearch.plugin.analysis")) {
+            if (name.startsWith("org.elasticsearch.plugin.analysis.test") ||
+                name.startsWith("org.elasticsearch.index.analysis.ESTokenStream") ||
+                name.startsWith("org.apache.lucene")) {
+                if (super.findLoadedClass(name) != null) {
+                    return super.loadClass(name);
+                }
                 return getClass(name);
             }
 
@@ -82,7 +88,7 @@ public class TestAnalysisTests extends ESTestCase {
 
     private Class<?> loadPluginClass(String className, ClassLoader loader) {
         try {
-            return Class.forName(className, false, loader).asSubclass(Plugin.class);
+            return loader.loadClass(className);
         } catch (ClassNotFoundException e) {
             throw new ElasticsearchException("Could not find plugin class [" + className + "]", e);
         }
@@ -90,7 +96,7 @@ public class TestAnalysisTests extends ESTestCase {
 
     private List<String> process(TokenStream filter) throws IOException {
         List<String> tas = new ArrayList<>();
-        CharTermAttribute termAtt = filter.getAttribute(CharTermAttribute.class);
+        CharTermAttribute termAtt = filter.addAttribute(CharTermAttribute.class);
         filter.reset();
         while (filter.incrementToken()) {
             tas.add(termAtt.toString());
@@ -103,28 +109,30 @@ public class TestAnalysisTests extends ESTestCase {
     public void testDifferentClassloaders() {
         AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
             PluginClassLoader pluginLoader = new PluginClassLoader(this.getClass().getClassLoader());
-            try {
-                AnalysisPlugin plugin = (AnalysisPlugin) loadPluginClass(AnalysisTestPlugin.class.getCanonicalName(), pluginLoader)
+            //URL[] urls={ AnalysisTestPlugin.class.getProtectionDomain().getCodeSource().getLocation() };
+
+            try {//(URLClassLoader pluginLoader = URLClassLoader.newInstance(urls, this.getClass().getClassLoader())) {
+                AnalysisPlugin plugin = (AnalysisPlugin) loadPluginClass(AnalysisTestPlugin.class.getName(), pluginLoader)
                     .getConstructor((Class<?>[]) null)
                     .newInstance();
-
-                TokenFilterFactory factory = plugin.getTokenFilters()
-                    .get("analysis_test_word_filter")
-                    .get(null, "analysis_test_word_filter");
 
                 String test = "Plop, juste pour voir l'embrouille avec Nikola et l'Elastic plug-ins. M'enfin.";
                 Tokenizer tokenizer = new StandardTokenizer(newAttributeFactory());
                 tokenizer.setReader(new StringReader(test));
                 CharArraySet articles = new CharArraySet(asSet("l", "M"), false);
                 TokenFilter filter = new ElisionFilter(tokenizer, articles);
-                TokenStream pluginStream = factory.create(filter);
+                TokenStream pluginStream = plugin.getTokenFilters()
+                    .get("analysis_test_word_filter")
+                    .get(null, "analysis_test_word_filter")
+                    .create(filter);
 
-                assertNotEquals(tokenizer.getClass().getClassLoader(), pluginStream.getClass().getClassLoader());
+                //assertNotEquals(tokenizer.getClass().getClassLoader(), pluginStream.getClass().getClassLoader());
 
                 List<String> pluginTas = process(pluginStream);
 
                 assertEquals("Elastic", pluginTas.get(0));
             } catch (Exception e) {
+                e.printStackTrace();
                 fail("Shouldn't reach here");
             }
 

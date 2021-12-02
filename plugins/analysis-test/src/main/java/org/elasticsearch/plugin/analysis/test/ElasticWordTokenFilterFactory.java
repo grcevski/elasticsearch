@@ -23,20 +23,23 @@ public class ElasticWordTokenFilterFactory extends PluginTokenFilterFactory {
     }
 
     @Override
-    public ESTokenStream create(ESTokenStream input) {
-        return wrap(new ElasticWordOnlyTokenFilter(input.unwrap(this)));
+    public ESTokenStream newInstance(ESTokenStream input) {
+        return wrap(new ElasticWordOnlyTokenFilter(input));
     }
 
     public class ElasticWordOnlyTokenFilter extends FilteringTokenFilter {
         private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
+        private final ESTokenStream in;
 
-        public ElasticWordOnlyTokenFilter(TokenStream in) {
+        public ElasticWordOnlyTokenFilter(ESTokenStream in) {
             super(in);
+            this.in = in;
         }
 
         @Override
         protected boolean accept() {
-            return termAtt.toString().equalsIgnoreCase("elastic");
+            boolean result = termAtt.toString().equalsIgnoreCase("elastic");
+            return result;
         }
     }
 }
