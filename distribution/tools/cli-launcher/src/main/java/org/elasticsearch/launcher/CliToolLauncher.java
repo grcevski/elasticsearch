@@ -8,6 +8,8 @@
 
 package org.elasticsearch.launcher;
 
+import jdk.crac.Core;
+
 import org.apache.logging.log4j.Level;
 import org.elasticsearch.cli.CliToolProvider;
 import org.elasticsearch.cli.Command;

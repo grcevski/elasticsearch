@@ -8,6 +8,11 @@
 
 package org.elasticsearch.bootstrap;
 
+import jdk.crac.CheckpointException;
+import jdk.crac.Core;
+
+import jdk.crac.RestoreException;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
@@ -95,6 +100,8 @@ class Elasticsearch {
         final PrintStream err = getStderr();
         final ServerArgs args;
         try {
+            //Core.checkpointRestore();
+
             initSecurityProperties();
 
             /*
@@ -208,7 +215,7 @@ class Elasticsearch {
      * @throws IOException if a problem with filesystem or network occurs
      * @throws NodeValidationException if the node cannot start due to a node configuration issue
      */
-    private static void initPhase3(Bootstrap bootstrap) throws IOException, NodeValidationException {
+    private static void initPhase3(Bootstrap bootstrap) throws IOException, NodeValidationException, RestoreException, CheckpointException {
         checkLucene();
 
         Node node = new Node(bootstrap.environment()) {
@@ -257,7 +264,7 @@ class Elasticsearch {
 
         // check if the user is running as root, and bail
         if (Natives.definitelyRunningAsRoot()) {
-            throw new RuntimeException("can not run elasticsearch as root");
+            //throw new RuntimeException("can not run elasticsearch as root");
         }
 
         if (systemCallFilter) {

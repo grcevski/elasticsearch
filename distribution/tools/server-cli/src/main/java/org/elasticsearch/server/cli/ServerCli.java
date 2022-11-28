@@ -8,6 +8,7 @@
 
 package org.elasticsearch.server.cli;
 
+import jdk.crac.Core;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import joptsimple.OptionSpecBuilder;
@@ -74,6 +75,8 @@ class ServerCli extends EnvironmentAwareCommand {
         }
 
         validateConfig(options, env);
+
+        Core.checkpointRestore();
 
         try (KeyStoreWrapper keystore = KeyStoreWrapper.load(env.configFile())) {
             // setup security
