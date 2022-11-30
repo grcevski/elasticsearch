@@ -76,7 +76,7 @@ class ServerCli extends EnvironmentAwareCommand {
 
         validateConfig(options, env);
 
-        Core.checkpointRestore();
+        //Core.checkpointRestore();
 
         try (KeyStoreWrapper keystore = KeyStoreWrapper.load(env.configFile())) {
             // setup security

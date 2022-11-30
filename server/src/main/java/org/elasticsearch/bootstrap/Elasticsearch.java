@@ -28,6 +28,7 @@ import org.elasticsearch.common.logging.LogConfigurator;
 import org.elasticsearch.common.network.IfConfig;
 import org.elasticsearch.common.settings.KeyStoreWrapper;
 import org.elasticsearch.common.settings.SecureSettings;
+import org.elasticsearch.common.settings.SecureString;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.BoundTransportAddress;
 import org.elasticsearch.core.IOUtils;
@@ -63,7 +64,6 @@ class Elasticsearch {
      * Main entry point for starting elasticsearch.
      */
     public static void main(final String[] args) {
-
         Bootstrap bootstrap = initPhase1();
         assert bootstrap != null;
 
@@ -100,8 +100,6 @@ class Elasticsearch {
         final PrintStream err = getStderr();
         final ServerArgs args;
         try {
-            //Core.checkpointRestore();
-
             initSecurityProperties();
 
             /*
@@ -120,11 +118,33 @@ class Elasticsearch {
             BootstrapInfo.init();
 
             // note that reading server args does *not* close System.in, as it will be read from later for shutdown notification
-            var in = new InputStreamStreamInput(System.in);
-            args = new ServerArgs(in);
+            //var in = new InputStreamStreamInput(System.in);
+            //args = new ServerArgs(in);
+
+            Settings nodeSettings = Settings
+                .builder()
+                .put("cluster.name", "elasticsearch")
+                .put("http.host", "0.0.0.0")
+                .put("node.name", "monster")
+                .put("path.home", "/home/nino/work/elasticsearch/build/distribution/local/elasticsearch-8.7.0-SNAPSHOT")
+                .put("path.logs", "/home/nino/work/elasticsearch/build/distribution/local/elasticsearch-8.7.0-SNAPSHOT/logs")
+                .put("xpack.security.enabled", "false")
+                .put("xpack.security.enrollment.enabled", "false")
+                .build();
+
+            args = new ServerArgs(
+                false,
+                false,
+                null,
+                new SecureString(""),
+                nodeSettings,
+                Path.of("/home/nino/work/elasticsearch/build/distribution/local/elasticsearch-8.7.0-SNAPSHOT/config")
+            );
 
             // mostly just paths are used in phase 1, so secure settings are not needed
             Environment nodeEnv = new Environment(args.nodeSettings(), args.configDir());
+
+            //Core.checkpointRestore();
 
             BootstrapInfo.setConsole(ConsoleLoader.loadConsole(nodeEnv));
 
@@ -148,7 +168,7 @@ class Elasticsearch {
      *
      * <p> Phase 2 consists of everything that must occur up to and including security manager initialization.
      */
-    private static void initPhase2(Bootstrap bootstrap) throws IOException {
+    private static void initPhase2(Bootstrap bootstrap) throws IOException, RestoreException, CheckpointException {
         final ServerArgs args = bootstrap.args();
         final SecureSettings keystore;
         try {
